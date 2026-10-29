@@ -1,0 +1,616 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111111">
+<title>Laporan Produksi</title>
+
+<style>
+*{box-sizing:border-box}
+:root{--black:#111;--white:#fff;--gray:#777;--line:#ddd;--soft:#f4f4f4}
+body{margin:0;background:#fff;color:#111;font-family:Arial,sans-serif;font-size:14px}
+header{background:#111;color:#fff;padding:23px 18px}
+.wrap{max-width:850px;margin:auto}
+.brand{font-size:10px;letter-spacing:3px;color:#bbb}
+h1{font-size:25px;margin:10px 0 5px}
+header p{font-size:12px;color:#ccc;margin:0}
+main{max-width:850px;margin:auto;padding:16px}
+.section{margin-bottom:22px}
+.heading{font-size:15px;font-weight:bold;border-bottom:2px solid #111;padding-bottom:10px;margin:0 0 15px}
+.heading small{font-size:11px;color:#777;font-weight:normal}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:12px;font-weight:bold;margin-bottom:6px}
+input,select{width:100%;padding:11px;border:1px solid #ccc;border-radius:5px;background:white;color:#111;font-size:14px;min-height:42px}
+input:focus,select:focus{outline:1px solid #111;border-color:#111}
+input[readonly]{background:#f2f2f2;font-weight:bold}
+.timegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{font-size:12px;font-weight:bold;padding:11px 13px;border:1px solid #111;border-radius:5px;cursor:pointer}
+.primary{background:#111;color:#fff}
+.secondary{background:#fff;color:#111}
+.danger{background:#fff;color:#111;border-color:#aaa}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.actions button{flex:1}
+.note{font-size:11px;color:#777;line-height:1.6;margin-top:8px}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #ccc}
+.sum{padding:12px 8px;border-right:1px solid #ddd;min-width:0}
+.sum:last-child{border:0}
+.sum label{font-size:10px;color:#666}
+.sum strong{font-size:18px;overflow-wrap:anywhere}
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.tab{background:white;border-color:#ccc;padding:9px 12px}
+.tab.active{background:#111;color:white;border-color:#111}
+.record{border:1px solid #ddd;padding:13px;margin:9px 0;border-radius:5px}
+.record-head{display:flex;justify-content:space-between;gap:8px}
+.badge{font-size:11px;font-weight:bold;border:1px solid #111;padding:4px 7px}
+.record h3{font-size:14px;margin:10px 0}
+.record p{font-size:12px;color:#444;margin:5px 0;line-height:1.6}
+.record-actions{display:flex;gap:7px;margin-top:12px}
+.record-actions button{flex:1}
+.empty{padding:25px 10px;text-align:center;color:#777;border:1px dashed #ccc;font-size:12px;line-height:1.8}
+.zone-summary{border:1px solid #ccc;margin:10px 0}
+.zone-title{background:#111;color:white;padding:10px 12px;font-weight:bold;display:flex;justify-content:space-between}
+.zone-body{padding:12px}
+.zone-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.metric{background:#f5f5f5;padding:10px 7px;min-width:0}
+.metric label{font-size:10px;color:#666}
+.metric strong{font-size:14px;overflow-wrap:anywhere}
+.zone-body .zone-count{font-size:11px;color:#666;margin-top:10px;line-height:1.7}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #ddd;white-space:nowrap}
+th{background:#f1f1f1}
+tfoot{font-weight:bold}
+footer{text-align:center;padding:20px;color:#888;font-size:10px;border-top:1px solid #eee}
+@media(max-width:380px){
+ main{padding:12px}
+ .sum strong{font-size:15px}
+ .metric strong{font-size:12px}
+ .grid{gap:9px}
+}
+@media print{
+ .no-print,header p,footer{display:none!important}
+ header{background:white;color:black;border-bottom:2px solid black;padding:12px}
+ main{padding:10px;max-width:none}
+ .record,.zone-summary{break-inside:avoid}
+}
+</style>
+</head>
+
+<body>
+<header>
+ <div class="wrap">
+  <div class="brand">PRODUCTION REPORT</div>
+  <h1>LAPORAN PRODUKSI</h1>
+  <p>Rekap hasil produksi berdasarkan zona Z1–Z5</p>
+ </div>
+</header>
+
+<main>
+ <section class="section">
+  <h2 class="heading">01. INPUT PRODUKSI</h2>
+  <form id="form">
+   <div class="grid">
+    <div>
+     <label for="tanggal">Tanggal produksi</label>
+     <input type="date" id="tanggal" required>
+    </div>
+    <div>
+     <label for="zona">Zona</label>
+     <select id="zona">
+      <option>Z1</option>
+      <option>Z2</option>
+      <option>Z3</option>
+      <option>Z4</option>
+      <option>Z5</option>
+     </select>
+    </div>
+
+    <div class="full">
+     <label for="produk">Nama produk</label>
+     <input id="produk" placeholder="Masukkan nama produk" required>
+    </div>
+
+    <div>
+     <label for="sak">Hasil produksi (sak)</label>
+     <input id="sak" type="number" min="0" step="1" placeholder="Contoh: 200" required>
+    </div>
+
+    <div>
+     <label for="hasilKg">Berat otomatis (kg)</label>
+     <input id="hasilKg" value="0 kg" readonly>
+     <div class="note">1 sak = 50 kg</div>
+    </div>
+
+    <div class="full">
+     <label for="tonase">Total tonase (ton)</label>
+     <input id="tonase" value="0" readonly>
+     <div class="note">Tonase dihitung otomatis dari jumlah sak × 50 kg ÷ 1.000.</div>
+    </div>
+
+    <div class="full">
+     <label>Waktu turun produk</label>
+     <div class="timegrid">
+      <div>
+       <label for="mulai">Jam mulai</label>
+       <input type="time" id="mulai" required>
+      </div>
+      <div>
+       <label for="selesai">Jam selesai</label>
+       <input type="time" id="selesai" required>
+      </div>
+     </div>
+     <div class="note">Durasi dihitung otomatis, termasuk jika produksi melewati tengah malam.</div>
+    </div>
+   </div>
+
+   <input type="hidden" id="editId">
+
+   <div class="actions">
+    <button class="primary" id="saveBtn" type="submit">+ SIMPAN PRODUKSI</button>
+    <button class="secondary" type="button" onclick="resetForm()">RESET</button>
+   </div>
+  </form>
+ </section>
+
+ <section class="section">
+  <h2 class="heading">02. TOTAL KESELURUHAN <small id="periode"></small></h2>
+  <div class="summary">
+   <div class="sum">
+    <label>TOTAL SAK</label>
+    <strong id="allSak">0</strong>
+   </div>
+   <div class="sum">
+    <label>TOTAL TONASE</label>
+    <strong id="allTon">0</strong>
+   </div>
+   <div class="sum">
+    <label>TOTAL JAM</label>
+    <strong id="allJam">0</strong>
+   </div>
+  </div>
+ </section>
+
+ <section class="section">
+  <h2 class="heading">03. DAFTAR PRODUKSI</h2>
+
+  <div class="no-print">
+   <label for="filterTanggal">Filter tanggal</label>
+   <input type="date" id="filterTanggal" style="margin-bottom:12px">
+
+   <div class="filters" id="tabs">
+    <button type="button" class="tab active" data-zone="SEMUA">SEMUA</button>
+    <button type="button" class="tab" data-zone="Z1">Z1</button>
+    <button type="button" class="tab" data-zone="Z2">Z2</button>
+    <button type="button" class="tab" data-zone="Z3">Z3</button>
+    <button type="button" class="tab" data-zone="Z4">Z4</button>
+    <button type="button" class="tab" data-zone="Z5">Z5</button>
+   </div>
+
+   <div class="actions">
+    <button class="primary" onclick="copyReport()" type="button">SALIN LAPORAN</button>
+    <button class="secondary" onclick="exportCSV()" type="button">EXPORT CSV</button>
+    <button class="secondary" onclick="window.print()" type="button">CETAK / PDF</button>
+   </div>
+  </div>
+
+  <p class="note">Urutan otomatis: Z1 → Z2 → Z3 → Z4 → Z5.</p>
+  <div id="records"></div>
+ </section>
+
+ <section class="section">
+  <h2 class="heading">04. REKAP JAM PER ZONA</h2>
+  <p class="note">Total jam per zona merupakan penjumlahan durasi masing-masing produk di zona tersebut.</p>
+  <div id="zoneSummary"></div>
+ </section>
+
+ <section class="section">
+  <h2 class="heading">05. TABEL REKAP</h2>
+  <div class="table-wrap">
+   <table>
+    <thead>
+     <tr>
+      <th>Zona</th>
+      <th>Produk</th>
+      <th>Sak</th>
+      <th>Ton</th>
+      <th>Durasi</th>
+     </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+    <tfoot id="tableFoot"></tfoot>
+   </table>
+  </div>
+ </section>
+</main>
+
+<footer>PRODUCTION REPORT • Z1–Z5</footer>
+
+<script>
+const KEY="laporan_produksi_z1_z5_v1";
+const ZONES=["Z1","Z2","Z3","Z4","Z5"];
+const $=id=>document.getElementById(id);
+let data=[];
+let activeZone="SEMUA";
+
+function today(){
+ const d=new Date();
+ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+
+function load(){
+ try{
+  const x=JSON.parse(localStorage.getItem(KEY)||"[]");
+  data=Array.isArray(x)?x:[];
+ }catch(e){data=[]}
+}
+
+function persist(){
+ try{
+  localStorage.setItem(KEY,JSON.stringify(data));
+  return true;
+ }catch(e){
+  alert("Penyimpanan gagal. Pastikan browser mengizinkan penyimpanan data.");
+  return false;
+ }
+}
+
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+
+function n(v){return Number(v)||0}
+
+function fmt(v,d=2){
+ return n(v).toLocaleString("id-ID",{maximumFractionDigits:d});
+}
+
+// Konversi otomatis: 1 sak = 50 kg
+function hitungTonase(){
+ const raw=$("sak").value;
+ const sak=raw===""?0:Number(raw);
+ const kg=sak*50;
+ const ton=kg/1000;
+
+ $("hasilKg").value=fmt(kg,0)+" kg";
+ $("tonase").value=String(ton);
+}
+
+$("sak").addEventListener("input",hitungTonase);
+
+function minutes(a,b){
+ if(!a||!b)return 0;
+ const x=a.split(":").map(Number);
+ const y=b.split(":").map(Number);
+ let diff=(y[0]*60+y[1])-(x[0]*60+x[1]);
+ if(diff<0)diff+=1440;
+ return diff;
+}
+
+function dur(m){
+ const h=Math.floor(m/60);
+ const r=m%60;
+ if(!h)return r+" menit";
+ if(!r)return h+" jam";
+ return h+" jam "+r+" menit";
+}
+
+function dateLabel(s){
+ if(!s)return "-";
+ return new Date(s+"T12:00:00").toLocaleDateString("id-ID",{
+  day:"2-digit",month:"long",year:"numeric"
+ });
+}
+
+function filtered(){
+ const date=$("filterTanggal").value;
+ return data.filter(r=>
+  (activeZone==="SEMUA"||r.zona===activeZone)&&
+  (!date||r.tanggal===date)
+ ).sort((a,b)=>
+  ZONES.indexOf(a.zona)-ZONES.indexOf(b.zona)||
+  a.tanggal.localeCompare(b.tanggal)||
+  (a.createdAt||0)-(b.createdAt||0)
+ );
+}
+
+function totals(list){
+ return {
+  sak:list.reduce((s,r)=>s+n(r.sak),0),
+  ton:list.reduce((s,r)=>s+n(r.sak)*50/1000,0),
+  min:list.reduce((s,r)=>s+minutes(r.mulai,r.selesai),0)
+ };
+}
+
+function render(){
+ const list=filtered();
+ const t=totals(list);
+
+ $("allSak").textContent=fmt(t.sak,0);
+ $("allTon").textContent=fmt(t.ton)+" ton";
+ $("allJam").textContent=dur(t.min);
+ $("periode").textContent=$("filterTanggal").value
+  ?"• "+dateLabel($("filterTanggal").value)
+  :"• Semua tanggal";
+
+ document.querySelectorAll(".tab").forEach(b=>{
+  b.classList.toggle("active",b.dataset.zone===activeZone);
+ });
+
+ if(!list.length){
+  $("records").innerHTML='<div class="empty">Belum ada data produksi.<br>Silakan masukkan laporan di bagian atas.</div>';
+ }else{
+  $("records").innerHTML=list.map((r,i)=>{
+   const kg=n(r.sak)*50;
+   const ton=kg/1000;
+   return `
+   <div class="record">
+    <div class="record-head">
+     <span class="badge">${esc(r.zona)}</span>
+     <span style="font-size:11px;color:#777">#${i+1}</span>
+    </div>
+    <h3>${esc(r.produk)}</h3>
+    <p>${fmt(r.sak,0)} sak &nbsp; | &nbsp; ${fmt(kg,0)} kg &nbsp; | &nbsp; ${fmt(ton)} ton</p>
+    <p>${esc(r.mulai)} – ${esc(r.selesai)} &nbsp; | &nbsp; <b>${dur(minutes(r.mulai,r.selesai))}</b></p>
+    <p style="color:#777">${dateLabel(r.tanggal)}</p>
+    <div class="record-actions no-print">
+     <button class="secondary" onclick="editItem('${r.id}')">EDIT</button>
+     <button class="danger" onclick="removeItem('${r.id}')">HAPUS</button>
+    </div>
+   </div>`;
+  }).join("");
+ }
+
+ $("zoneSummary").innerHTML=ZONES.map(z=>{
+  const a=list.filter(r=>r.zona===z);
+  const v=totals(a);
+  return `
+   <div class="zone-summary">
+    <div class="zone-title">
+     <span>${z}</span><span>${a.length} produk</span>
+    </div>
+    <div class="zone-body">
+     <div class="zone-metrics">
+      <div class="metric"><label>TOTAL SAK</label><strong>${fmt(v.sak,0)}</strong></div>
+      <div class="metric"><label>TONASE</label><strong>${fmt(v.ton)} ton</strong></div>
+      <div class="metric"><label>TOTAL JAM</label><strong>${dur(v.min)}</strong></div>
+     </div>
+     <div class="zone-count">${a.length?a.map(r=>esc(r.produk)).join(" • "):"Belum ada produksi"}</div>
+    </div>
+   </div>`;
+ }).join("");
+
+ $("tableBody").innerHTML=ZONES.map(z=>{
+  const a=list.filter(r=>r.zona===z);
+  const v=totals(a);
+  return `<tr>
+   <td><b>${z}</b></td>
+   <td>${a.length} produk</td>
+   <td>${fmt(v.sak,0)}</td>
+   <td>${fmt(v.ton)}</td>
+   <td>${dur(v.min)}</td>
+  </tr>`;
+ }).join("");
+
+ $("tableFoot").innerHTML=`
+  <tr>
+   <td colspan="2">TOTAL</td>
+   <td>${fmt(t.sak,0)}</td>
+   <td>${fmt(t.ton)}</td>
+   <td>${dur(t.min)}</td>
+  </tr>`;
+}
+
+$("form").addEventListener("submit",e=>{
+ e.preventDefault();
+
+ const id=$("editId").value;
+ const old=data.find(r=>r.id===id);
+
+ const sak=Number($("sak").value);
+ if($("sak").value===""||!Number.isFinite(sak)||sak<0||!Number.isInteger(sak)){
+  alert("Jumlah sak harus berupa bilangan bulat nol atau lebih.");
+  return;
+ }
+
+ const r={
+  id:id||("p"+Date.now()+Math.random().toString(36).slice(2,6)),
+  tanggal:$("tanggal").value,
+  zona:$("zona").value,
+  produk:$("produk").value.trim(),
+  sak:sak,
+  tonase:sak*50/1000,
+  mulai:$("mulai").value,
+  selesai:$("selesai").value,
+  createdAt:old?old.createdAt:Date.now()
+ };
+
+ if(!r.produk||!r.tanggal||!r.mulai||!r.selesai){
+  alert("Lengkapi semua data terlebih dahulu.");
+  return;
+ }
+
+ if(minutes(r.mulai,r.selesai)===0){
+  alert("Jam mulai dan selesai tidak boleh sama.");
+  return;
+ }
+
+ const backup=[...data];
+ if(id)data=data.map(x=>x.id===id?r:x);
+ else data.push(r);
+
+ if(!persist()){
+  data=backup;
+  return;
+ }
+
+ activeZone=r.zona;
+ $("filterTanggal").value=r.tanggal;
+ resetForm();
+ render();
+ alert(id?"Laporan berhasil diperbarui.":"Laporan berhasil disimpan.");
+});
+
+function resetForm(){
+ $("form").reset();
+ $("tanggal").value=today();
+ $("editId").value="";
+ $("saveBtn").textContent="+ SIMPAN PRODUKSI";
+ $("zona").value=activeZone==="SEMUA"?"Z1":activeZone;
+ hitungTonase();
+}
+
+function editItem(id){
+ const r=data.find(x=>x.id===id);
+ if(!r)return;
+
+ $("tanggal").value=r.tanggal;
+ $("zona").value=r.zona;
+ $("produk").value=r.produk;
+ $("sak").value=r.sak;
+ $("mulai").value=r.mulai;
+ $("selesai").value=r.selesai;
+ $("editId").value=r.id;
+ $("saveBtn").textContent="SIMPAN PERUBAHAN";
+
+ hitungTonase();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function removeItem(id){
+ const r=data.find(x=>x.id===id);
+ if(!r)return;
+ if(!confirm("Hapus produk "+r.produk+" dari "+r.zona+"?"))return;
+
+ const backup=[...data];
+ data=data.filter(x=>x.id!==id);
+
+ if(!persist()){
+  data=backup;
+  return;
+ }
+
+ if($("editId").value===id)resetForm();
+ render();
+}
+
+$("tabs").addEventListener("click",e=>{
+ const b=e.target.closest("[data-zone]");
+ if(!b)return;
+ activeZone=b.dataset.zone;
+ if($("editId").value)resetForm();
+ render();
+});
+
+$("filterTanggal").addEventListener("change",render);
+
+function reportText(){
+ const list=filtered();
+ const lines=[
+  "LAPORAN PRODUKSI",
+  "Tanggal: "+($("filterTanggal").value?dateLabel($("filterTanggal").value):"Semua tanggal"),
+  ""
+ ];
+
+ ZONES.forEach(z=>{
+  const a=list.filter(r=>r.zona===z);
+  if(!a.length)return;
+
+  lines.push("==============================");
+  lines.push(z);
+  lines.push("==============================");
+
+  a.forEach((r,i)=>{
+   const kg=n(r.sak)*50;
+   const ton=kg/1000;
+   lines.push(`${i+1}. ${r.produk} — ${fmt(r.sak,0)} sak — ${fmt(kg,0)} kg — ${fmt(ton)} ton — ${r.mulai}-${r.selesai}`);
+  });
+
+  const v=totals(a);
+  lines.push(`TOTAL ${z}: ${fmt(v.sak,0)} sak | ${fmt(v.sak*50,0)} kg | ${fmt(v.ton)} ton | ${dur(v.min)}`);
+  lines.push("");
+ });
+
+ const t=totals(list);
+ lines.push("==============================");
+ lines.push("TOTAL KESELURUHAN");
+ lines.push(`${fmt(t.sak,0)} sak | ${fmt(t.sak*50,0)} kg | ${fmt(t.ton)} ton | ${dur(t.min)}`);
+
+ return lines.join("\n");
+}
+
+async function copyReport(){
+ if(!filtered().length){
+  alert("Belum ada laporan untuk disalin.");
+  return;
+ }
+
+ const text=reportText();
+
+ try{
+  await navigator.clipboard.writeText(text);
+  alert("Laporan berhasil disalin. Silakan tempel ke WhatsApp.");
+ }catch(e){
+  const ta=document.createElement("textarea");
+  ta.value=text;
+  ta.style.position="fixed";
+  ta.style.left="-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  const ok=document.execCommand("copy");
+  ta.remove();
+  alert(ok?"Laporan berhasil disalin.":"Gagal menyalin. Coba gunakan Chrome.");
+ }
+}
+
+function exportCSV(){
+ const list=filtered();
+ if(!list.length){
+  alert("Belum ada laporan untuk diekspor.");
+  return;
+ }
+
+ const rows=[
+  ["Tanggal","Zona","Nama Produk","Sak","Berat (kg)","Tonase (ton)","Jam Mulai","Jam Selesai","Durasi (menit)"]
+ ];
+
+ list.forEach(r=>rows.push([
+  r.tanggal,r.zona,r.produk,r.sak,
+  n(r.sak)*50,n(r.sak)*50/1000,
+  r.mulai,r.selesai,minutes(r.mulai,r.selesai)
+ ]));
+
+ rows.push([]);
+ rows.push(["REKAP ZONA","Jumlah Produk","Total Sak","Total Kg","Total Ton","Total Durasi"]);
+
+ ZONES.forEach(z=>{
+  const a=list.filter(r=>r.zona===z);
+  const v=totals(a);
+  rows.push([z,a.length,v.sak,v.sak*50,v.ton,dur(v.min)]);
+ });
+
+ const csv="\uFEFF"+rows.map(row=>row.map(v=>
+  '"'+String(v??"").replace(/"/g,'""')+'"'
+ ).join(";")).join("\r\n");
+
+ const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+ const a=document.createElement("a");
+ a.href=url;
+ a.download="Laporan_Produksi_"+today()+".csv";
+ document.body.appendChild(a);
+ a.click();
+ a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+load();
+$("tanggal").value=today();
+hitungTonase();
+render();
+</script>
+</body>
+</html>
